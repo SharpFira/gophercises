@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -37,6 +38,37 @@ func getUserInput() int {
 	}
 
 	return numberIn
+}
+
+func getTimerFlag() int {
+	fmt.Println("Ready to start the quiz. The default time is set to 10 seconds but you can modify it.")
+
+	fmt.Println("Do you wish to modify timer? write yes/no")
+
+	reader := bufio.NewReader(os.Stdin)
+
+	line, error := reader.ReadString('\n')
+
+	if error != nil {
+		log.Fatal("User has stopped or done something wrong...")
+
+		os.Exit(3)
+	}
+
+	var attempt, maxAttempts int = 0, 3
+
+	for attempt <= maxAttempts {
+		var possibleAnswers = []string{"yes", "no"}
+
+		userInput := strings.ToLower(line)
+
+		if !slices.Contains(possibleAnswers, userInput) {
+			attempt++
+			fmt.Printf("Wrong answer - attempt=%d. Try answering again?", attempt)
+		} else {
+			break
+		}
+	}
 }
 
 func main() {
