@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getFile(path string) *os.File {
@@ -45,30 +46,50 @@ func getTimerFlag() int {
 
 	fmt.Println("Do you wish to modify timer? write yes/no")
 
-	reader := bufio.NewReader(os.Stdin)
-
-	line, error := reader.ReadString('\n')
-
-	if error != nil {
-		log.Fatal("User has stopped or done something wrong...")
-
-		os.Exit(3)
-	}
-
+	userWantsToCustomize := false
+	defaultTimerNumber := 30
 	var attempt, maxAttempts int = 0, 3
+	var possibleAnswers = []string{"yes", "no"}
 
 	for attempt <= maxAttempts {
-		var possibleAnswers = []string{"yes", "no"}
 
-		userInput := strings.ToLower(line)
+		reader := bufio.NewReader(os.Stdin)
+
+		line, error := reader.ReadString('\n')
+
+		if error != nil {
+			log.Fatal("User has stopped or done something wrong...")
+
+			os.Exit(3)
+		}
+
+		userInput := strings.TrimSpace(strings.ToLower(line))
 
 		if !slices.Contains(possibleAnswers, userInput) {
 			attempt++
 			fmt.Printf("Wrong answer - attempt=%d. Try answering again?", attempt)
+			fmt.Print("\n")
 		} else {
+
+			if userInput == possibleAnswers[1] {
+				break
+			}
+
+			userWantsToCustomize = true
+
 			break
 		}
 	}
+
+	var timerInput int = defaultTimerNumber
+
+	if userWantsToCustomize {
+		fmt.Print("Enter a number in seconds you want the timer to run: ")
+		fmt.Scan(&timerInput)
+		fmt.Println("The timer will run for: ", timerInput)
+	}
+
+	return timerInput
 }
 
 func main() {
@@ -90,6 +111,7 @@ func main() {
 	resultQuestionMap := make(map[string]string)
 
 	for i := 0; i < len(records); i++ {
+
 		question := records[i][0]
 		result := records[i][1]
 
@@ -99,19 +121,43 @@ func main() {
 	lengthOfMap := strconv.Itoa(len(resultQuestionMap))
 	fmt.Printf("The csv has been read and there are %s in memory. \n", lengthOfMap)
 
+	var selectedTimer int = getTimerFlag()
+
+	fmt.Println("The user have set the timer to: ", selectedTimer)
+
 	var correctAnswered = 0
 	var failedQuestion = 0
 
+	timer := time.NewTimer(time.Duration(selectedTimer) * time.Second)
+	defer timer.Stop()
+
+	answerCh := make(chan int, 1)
+	expired := false
+
 	for result, question := range resultQuestionMap {
+		if expired {
+			break
+		}
+
 		fmt.Printf("What is correct answer to: %s \n", question)
-		numberOut := getUserInput()
 
-		resultAsNumber, _ := strconv.Atoi(result)
+		go func() {
+			answerCh <- getUserInput()
+		}()
 
-		if numberOut == resultAsNumber {
-			correctAnswered++
-		} else {
-			failedQuestion++
+		select {
+		case <-timer.C:
+			fmt.Println("\nTime's up!")
+			expired = true
+
+		case numberOut := <-answerCh:
+			resultAsNumber, _ := strconv.Atoi(result)
+
+			if numberOut == resultAsNumber {
+				correctAnswered++
+			} else {
+				failedQuestion++
+			}
 		}
 	}
 
