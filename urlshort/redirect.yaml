@@ -1,0 +1,4 @@
+- path: /urlshort
+  url: https://github.com/gophercises/urlshort
+- path: /pkg.go.dev
+  url: https://pkg.go.dev/net/http#Handler

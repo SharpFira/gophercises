@@ -4,19 +4,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"text/template"
+
+	"gopkg.in/yaml.v3"
 )
 
 type PageData struct {
 	InMemoryMap map[string]string
 }
 
-func feedTheMap(memMap *map[string]string) {
-
-}
-
 type SimpleHandler struct {
 	inMemMap map[string]string
+}
+
+type YamlHandler struct {
+	yamlPath string
+}
+
+type RedirectPath struct {
+	Path string `yaml:"path"`
+	URL  string `yaml:"url"`
 }
 
 func (handler SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +45,38 @@ func (handler SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func main() {
-	//inMemoryMap := make(map[string]string)
+func (handler YamlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Invoking yaml handler...")
 
+	data, err := os.ReadFile(handler.yamlPath)
+
+	if err != nil {
+		log.Fatal("Could not read yaml file: ", handler.yamlPath)
+	}
+
+	var paths []RedirectPath
+
+	yamlParsingError := yaml.Unmarshal(data, &paths)
+
+	if yamlParsingError != nil {
+		log.Fatal("Could not parse yaml file: ", yamlParsingError.Error())
+	}
+
+	urlKey := strings.TrimPrefix(r.URL.Path, "/yaml")
+	fmt.Println("KEY IS: ", urlKey)
+
+	for _, v := range paths {
+		fmt.Println("PATH ARE: ", v.Path)
+		if v.Path == urlKey {
+			http.Redirect(w, r, v.URL, http.StatusFound)
+			return
+		}
+	}
+
+	http.Error(w, "Could not find key in yaml", http.StatusBadRequest)
+}
+
+func main() {
 	templateData := PageData{
 		InMemoryMap: make(map[string]string),
 	}
@@ -50,6 +88,12 @@ func main() {
 	}
 
 	http.Handle("/redirect/{key}", redirectHandler)
+
+	yamlHandler := YamlHandler{
+		yamlPath: "./redirect.yaml",
+	}
+
+	http.Handle("/yaml/{key}", yamlHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var errorMessage string
