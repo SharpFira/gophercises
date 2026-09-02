@@ -1,4 +1,4 @@
-package urlshort
+package main
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 // implements http.Handler) that will attempt to map any
 // paths (keys in the map) to their corresponding URL (values
 // that each key in the map points to, in string format).
-// If the path is not provided in the map, then the fallback
+// If the path is not provided in the map, then the fallbacks
 // http.Handler will be called instead.
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
 	//	TODO: Implement this...

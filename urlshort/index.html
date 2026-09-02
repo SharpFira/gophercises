@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin-top: 4rem;
+        }
+
+        .field {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+
+            & input {
+                margin-top: 3px;
+                width: 400px;
+                padding: 6px 6px 6px 6px;
+            }
+
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+            color: white;
+            font-weight: 700;
+            font-size: large;
+            padding: 10px;
+            border: unset;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .inMemDataRow {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .inMemDataRow p:first-child {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Url Shortener</h1>
+    <form action="/" method="post">
+        <div class="field">
+            <label for="key">Key:</label>
+            <input type="text" name="key" id="key">
+        </div>
+        <div class="field">
+            <label for="url">Url:</label>
+            <input type="text" name="url" id="url">
+        </div>
+        <button type="submit" class="btn">submit</button>
+    </form>
+
+    <div>
+        <h1>Current Map:</h1>
+        <ul>
+            {{ range $key, $value := .InMemoryMap }}
+            <li class="inMemDataRow">
+                <p>{{ $key }}</p>
+                <span> || </span>
+                <p>{{ $value }}</p>
+            </li>
+            {{ end }}
+        </ul>
+    </div>
+</body>
+
+</html>
