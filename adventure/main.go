@@ -1,0 +1,5 @@
+package adventure
+
+func main() {
+
+}
